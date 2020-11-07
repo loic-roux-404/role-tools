@@ -1,0 +1,24 @@
+---
+- name: Download n (simple golang version manager)
+  get_url:
+    url: https://git.io/g-install
+    dest: /tmp/g-install
+    mode: 550
+
+- name: Setup g version manager
+  command: /opt/g-install -s -- bash zsh
+
+- name: Clean
+  file:
+    state: absent
+    path: /opt/g-install
+
+- name: Setup n
+  command: "g install {{ golang_version }}"
+
+- name: Setup n
+  command: "g set {{ golang_version }}"
+
+- name: Go packages are installed
+  command: "go get {{ item.name }}@{{ item.version }}"
+  loop: "{{ golang_packages }}"

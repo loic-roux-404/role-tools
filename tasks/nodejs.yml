@@ -1,0 +1,23 @@
+---
+- name: Download n (simple node version manager)
+  get_url:
+    url: https://raw.githubusercontent.com/tj/n/master/bin/n
+    dest: /usr/local/bin/n
+    mode: 550
+
+- name: Setup n
+  command: "n {{ node_version }}"
+
+- name: "Yarn | Include OS-specific tasks"
+  include_tasks: "yarn-{{ ansible_os_family }}.yml"
+  when: yarn_install_state
+
+- name: "Yarn | Install"
+  package:
+    name: yarn
+    state: present
+  when: yarn_install_state
+  register: task_result
+  until: task_result is success
+  retries: 10
+  delay: 2

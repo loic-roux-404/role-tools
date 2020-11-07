@@ -2,4 +2,8 @@
 - hosts: localhost
   remote_user: root
   roles:
+<<<<<<< HEAD
     - secu
+=======
+    - role-tools
+>>>>>>> ae723e8... role base
