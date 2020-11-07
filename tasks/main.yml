@@ -1,19 +1,4 @@
 ---
-<<<<<<< HEAD
-- name: Install ufw packages
-  apt: 
-    pkg: "{{ packages }}"
-    state: present
-
-- name: Allow all access from RFC1918 networks to this host
-  ufw:
-    rule: allow
-    src: '{{ item }}'
-  loop:
-    - '10.0.0.0/8'
-    - '172.16.0.0/12'
-    - '192.168.0.0/16'
-=======
 - include_tasks: nodejs.yml
   become_user: "{{ tools_user }}"
   tags: [nodejs]
@@ -21,4 +6,3 @@
 - include_tasks: golang.yml
   become_user: "{{ tools_user }}"
   tags: [golang]
->>>>>>> ae723e8... role base
