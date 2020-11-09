@@ -1,12 +1,43 @@
 ---
+- name: "g | Check for installation"
+  command: which g
+  register: g_result
+  changed_when: false
+  failed_when: false
+
+- name: "g | Register existing installation status"
+  set_fact:
+    g_install_state: true
+  changed_when: false
+  when: '"g" in g_result.stdout or g_result.rc != 0'
+
 - name: Download g (simple golang version manager)
   get_url:
     url: https://git.io/g-install
     dest: /tmp/g-install
-    mode: 0550
+    mode: 0555
+  when: g_install_state
+
+- name: Creates directory
+  become: yes
+  file:
+    path: "{{ go_path }}"
+    state: directory
+    mode: 0755
+    recurse: yes
+
+- name: go environment
+  copy:
+    mode: u=rw,g=r,o=r
+    dest: /etc/profile.d/go-env.sh
+    content: "\
+      {% for key, value in go_env.items() %}\
+      export {{ key }}={{ value }}\n\
+      {% endfor %}"
 
 - name: Setup g version manager
-  command: /tmp/g-install -y bash zsh
+  shell: "GOPATH={{ go_env.GOPATH }} GOROOT={{ go_env.GOROOT }} /tmp/g-install -y bash zsh"
+  when: g_install_state
 
 - name: Clean
   become: yes
@@ -14,19 +45,36 @@
     state: absent
     path: /tmp/g-install
 
-- name: Enable Go modules
-  lineinfile:
-    dest: "/etc/environment"
-    state: present
-    regexp: "^GO111MODULE="
-    line: "GO111MODULE=on"
+- name: "golang | Check for installation"
+  command: which go
+  register: go_result
+  changed_when: false
+  failed_when: false
 
-- name: Install go
+- name: "golang | Register existing installation status"
+  set_fact:
+    golang_install_state: true
+  changed_when: false
+  when: '"go" in go_result.stdout or go_result.rc != 0'
+
+- name: Install golang
   command: "g install {{ golang_version }}"
+  environment: "{{ go_env }}"
+
+- name: Fix zshrc PATH
+  lineinfile:
+    path: "{{ item.home | d('home/' + item.username) }}/.zshrc"
+    line: "for f in /etc/profile.d/*; do . $f; done"
+    mode: 660
+    create: true
+  loop: "{{ users + [{'username': 'root', 'home': '/root'}] }}"
 
 - name: Setup go
   command: "g set {{ golang_version }}"
+  environment: "{{ go_env }}"
 
 - name: Go packages install
   command: "go get {{ item.name }}@{{ item.version }}"
   loop: "{{ golang_packages }}"
+  environment: "{{ go_env }}"
+  when: go_modules

@@ -1,13 +1,39 @@
 ---
 
+- name: "n | Check for installation"
+  command: which n
+  register: n_result
+  changed_when: false
+  failed_when: false
+
+- name: "n | Register existing installation status"
+  set_fact:
+    n_install_state: true
+  changed_when: false
+  when: '"n" in n_result.stdout or n_result.rc != 0'
+
 - name: Download n (simple node version manager)
   get_url:
     url: https://raw.githubusercontent.com/tj/n/master/bin/n
     dest: /usr/local/bin/n
-    mode: 0550
+    mode: 0555
+  when: n_install_state
+
+- name: "nodejs | Check for installation"
+  command: which node
+  register: node_result
+  changed_when: false
+  failed_when: false
+
+- name: "nodejs | Register existing installation status"
+  set_fact:
+    node_install_state: true
+  changed_when: false
+  when: '"node" in node_result.stdout or node_result.rc != 0'
 
 - name: Setup n
   command: "n {{ node_version }}"
+  when: node_install_state # TODO update if version change
 
 - name: "Yarn | Check for installation"
   command: which yarn

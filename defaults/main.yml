@@ -1,9 +1,27 @@
 ---
+# Use it to get correct path
+users:
+  - username: "{{ ansible_user_id }}"
+    home: "/home/{{ ansible_user_id }}"
+# Versions
 node_version: lts # semantic version | lts | (latest / current)
 yarn_version: latest # semantic version | latest
-golang_version: latest # semantic version | latest
+golang_version: latest # tag vX.X.X | latest
+# any other location don't work
+go_root: "/opt/go-{{ golang_version }}"
+go_path: "{{ go_root }}"
+# can't install golang packages without this
+go_modules: True
+go_env:
+  GOPATH: "{{ go_path }}"
+  GOROOT: "{{ go_root }}"
+  PATH: "{{ ansible_env.PATH }}:{{ go_path }}/bin"
+  GO111MODULE: "{{ 'off' if not go_modules else 'on' }}"
 # [{
 #    name: package_name
 #    version: git version
 # }]
 golang_packages: []
+# ex :
+#  - name: github.com/gohugoio/hugo
+#    version: v0.76.3
