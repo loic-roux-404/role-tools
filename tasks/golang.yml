@@ -38,12 +38,19 @@
 - name: Setup g version manager
   shell: "GOPATH={{ go_env.GOPATH }} GOROOT={{ go_env.GOROOT }} /tmp/g-install -y bash zsh"
   when: g_install_state
+  ignore_errors: yes
 
 - name: Clean
   become: yes
   file:
     state: absent
     path: /tmp/g-install
+  when: g_install_state
+
+- name: "g | Verify installation"
+  command: which g
+  register: diff_cmd
+  failed_when: diff_cmd.rc > 1
 
 - name: "golang | Check for installation"
   command: which go
@@ -60,14 +67,6 @@
 - name: Install golang
   command: "g install {{ golang_version }}"
   environment: "{{ go_env }}"
-
-- name: Fix zshrc PATH
-  lineinfile:
-    path: "{{ item.home | d('home/' + item.username) }}/.zshrc"
-    line: "for f in /etc/profile.d/*; do . $f; done"
-    mode: 660
-    create: true
-  loop: "{{ users + [{'username': 'root', 'home': '/root'}] }}"
 
 - name: Setup go
   command: "g set {{ golang_version }}"
