@@ -34,5 +34,4 @@ golang_packages: []
 #    deps:
 #      - gcc # for libsass
 #      - g++ # same
-# TODO implement
-golang_packages_remove: []
+#    state: "absent" or "present"

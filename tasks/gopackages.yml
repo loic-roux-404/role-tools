@@ -7,7 +7,7 @@
         gopackage_install_state: false
 
     - name: "{{ gopackage.name }} | Check for installation"
-      command: "which {{ gopackage }}"
+      command: "which {{ gopackage_bin }}"
       register: gopackage_result
       changed_when: false
       failed_when: false
@@ -26,20 +26,20 @@
         state: present
         update_cache: yes
       become: yes
-      when: gopackage_install_state and (gopackage.deps|length) >= 1
+      when: not gopackage_install_state and (gopackage.deps|length) >= 1
 
     - name: "{{ gopackage.name }} | go get"
       command: "go get {{ gopackage.flags | d('') }} {{ gopackage.name }}@{{ gopackage.version }}"
-      when: gopackage_install_state and gopackage_present
+      when: not gopackage_install_state and gopackage_present
 
     - name: "{{ gopackage.name }} | remove if state absent"
       file:
         path: "{{ item }}"
         state: absent
-      when: not gopackage_install_state and not gopackage_present
       loop:
         - "$GOPATH/bin/{{ gopackage_bin }}"
         - "$GOPATH/pkg/mod/{{ gopackage.name }}"
+      when: gopackage_install_state and not gopackage_present
 
     - name: "{{ gopackage.name }} | clean dependencies for build"
       package:
@@ -48,13 +48,13 @@
         update_cache: yes
       become: yes
       when:
-        - gopackage_present and gopackage_install_state
+        - not gopackage_install_state and gopackage_present
         - gopackage.deps|length >= 1
 
-    - name: "{{ gopackage.name }} | Clean unwanted olderstuff"
+    - name: "{{ gopackage.name }} | Clean build packages"
       apt:
         autoremove: yes
         purge: yes
       when:
         - gopackage_present and ansible_os_family == 'Debian'
-        - gopackage_install_state
+        - not gopackage_install_state
