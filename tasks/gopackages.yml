@@ -1,0 +1,60 @@
+- environment: "{{ go_env }}"
+  block:
+    - name: "{{ gopackage.name }} | find binary file / other useful vars"
+      set_fact:
+        gopackage_bin: "{{ gopackage.name.split('/')[-1] }}"
+        gopackage_present: "{{ (gopackage.state | d('present')) == 'present' }}"
+        gopackage_install_state: false
+
+    - name: "{{ gopackage.name }} | Check for installation"
+      command: "which {{ gopackage }}"
+      register: gopackage_result
+      changed_when: false
+      failed_when: false
+
+    - name: "{{ gopackage.name }} | Register existing installation status"
+      set_fact:
+        gopackage_install_state: true
+      changed_when: false
+      when:
+        - gopackage.name in gopackage_result.stdout
+        - gopackage_result.rc != 0
+
+    - name: "{{ gopackage.name }} | dependencies for build"
+      package:
+        name: '{{ gopackage.deps }}'
+        state: present
+        update_cache: yes
+      become: yes
+      when: gopackage_install_state and (gopackage.deps|length) >= 1
+
+    - name: "{{ gopackage.name }} | go get"
+      command: "go get {{ gopackage.flags | d('') }} {{ gopackage.name }}@{{ gopackage.version }}"
+      when: gopackage_install_state and gopackage_present
+
+    - name: "{{ gopackage.name }} | remove if state absent"
+      file:
+        path: "{{ item }}"
+        state: absent
+      when: not gopackage_install_state and not gopackage_present
+      loop:
+        - "$GOPATH/bin/{{ gopackage_bin }}"
+        - "$GOPATH/pkg/mod/{{ gopackage.name }}"
+
+    - name: "{{ gopackage.name }} | clean dependencies for build"
+      package:
+        name: '{{ gopackage.deps }}'
+        state: absent
+        update_cache: yes
+      become: yes
+      when:
+        - gopackage_present and gopackage_install_state
+        - gopackage.deps|length >= 1
+
+    - name: "{{ gopackage.name }} | Clean unwanted olderstuff"
+      apt:
+        autoremove: yes
+        purge: yes
+      when:
+        - gopackage_present and ansible_os_family == 'Debian'
+        - gopackage_install_state

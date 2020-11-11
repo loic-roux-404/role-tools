@@ -4,3 +4,13 @@
 
 - include_tasks: golang.yml
   tags: [golang]
+
+- name: Go packages install
+  tags: [golang, gopackages]
+  include_tasks: gopackages.yml
+  loop_control:
+    loop_var: gopackage
+  loop: "{{ golang_packages }}"
+  when:
+    - go_modules | d(False)
+    - (golang_packages|length) >= 1

@@ -47,11 +47,6 @@
     path: /tmp/g-install
   when: g_install_state
 
-- name: "g | Verify installation"
-  command: which g
-  register: diff_cmd
-  failed_when: diff_cmd.rc > 1
-
 - name: "golang | Check for installation"
   command: which go
   register: go_result
@@ -67,13 +62,9 @@
 - name: Install golang
   command: "g install {{ golang_version }}"
   environment: "{{ go_env }}"
+  when: golang_install_state
 
 - name: Setup go
   command: "g set {{ golang_version }}"
   environment: "{{ go_env }}"
-
-- name: Go packages install
-  command: "go get {{ item.name }}@{{ item.version }}"
-  loop: "{{ golang_packages }}"
-  environment: "{{ go_env }}"
-  when: go_modules
+  when: golang_install_state
