@@ -68,3 +68,10 @@
   command: "g set {{ golang_version }}"
   environment: "{{ go_env }}"
   when: golang_install_state
+
+- name: "symlink go to bin system"
+  file:
+    src: "{{ go_env.GOPATH }}/bin/go"
+    dest: "/usr/local/bin/go"
+    state: link
+  when: golang_install_state

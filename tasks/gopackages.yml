@@ -32,6 +32,13 @@
       command: "go get {{ gopackage.flags | d('') }} {{ gopackage.name }}@{{ gopackage.version }}"
       when: not gopackage_install_state and gopackage_present
 
+    - name: "{{ gopackage.name }} | symlink to bin system"
+      file:
+        src: "{{ go_env.GOPATH }}/bin/{{ gopackage_bin }}"
+        dest: "/usr/local/bin/{{ gopackage_bin }}"
+        state: link
+      when: not gopackage_install_state and gopackage_present
+
     - name: "{{ gopackage.name }} | remove if state absent"
       file:
         path: "{{ item }}"
