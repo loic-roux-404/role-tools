@@ -25,4 +25,5 @@ galaxy_info:
     - go
     - node
     - yarn
+    - python
 dependencies: []

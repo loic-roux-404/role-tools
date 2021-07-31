@@ -5,7 +5,7 @@ role-tools
 ### TO DO
 - [ ] adjust already installed checks for faster role exec
 
-Install tools and dependencies for them : `go`, `nodejs`, `yarn`
+Install tools and dependencies for `go`, `nodejs`, `yarn`, `python` and system packages
 
 - For `go` is used : [g](https://github.com/stefanmaric/g)
 - For `node` is used : [n](https://github.com/tj/n)

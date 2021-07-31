@@ -3,6 +3,21 @@
 users:
   - username: "{{ ansible_user_id }}"
     home: "/home/{{ ansible_user_id }}"
+
+base_packages:
+  - wget
+  - zip
+  - unzip
+  - gnupg2
+
+packages:
+  - hello
+
+remove_packages:
+  - apache*
+
+pip_packages: []
+
 # Versions
 node_version: lts # semantic version | lts | (latest / current)
 yarn_version: latest # semantic version | latest

@@ -1,0 +1,15 @@
+---
+- name: Remove packages
+  package:
+    name: "{{ remove_packages }}"
+    state: absent
+    autoremove: yes
+    purge: yes
+
+- name: Install packages
+  package:
+    name: "{{ base_packages + packages }}"
+    state: present
+    update_cache: yes
+    force: yes
+  become: yes
