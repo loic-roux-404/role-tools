@@ -9,6 +9,7 @@ base_packages:
   - zip
   - unzip
   - gnupg2
+  - vim
 
 packages:
   - hello
