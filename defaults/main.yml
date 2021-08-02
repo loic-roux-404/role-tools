@@ -4,20 +4,8 @@ users:
   - username: "{{ ansible_user_id }}"
     home: "/home/{{ ansible_user_id }}"
 
-base_packages:
-  - wget
-  - zip
-  - unzip
-  - gnupg2
-  - vim
-
-packages:
-  - hello
-
-remove_packages:
-  - apache*
-
 pip_packages: []
+pip_packages_force: [virtualenv]
 
 # Versions
 node_version: lts # semantic version | lts | (latest / current)

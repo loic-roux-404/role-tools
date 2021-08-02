@@ -5,3 +5,10 @@
     state: present
   become: yes
   become_user: root
+
+- name: force reinstall python modules
+  pip:
+    name:  "{{ pip_packages_force }}"
+    state: forcereinstall
+  become: yes
+  become_user: root

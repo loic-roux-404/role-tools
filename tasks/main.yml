@@ -1,4 +1,7 @@
 ---
+- include_tasks: python.yml
+  tags: [python]
+
 - include_tasks: nodejs.yml
   tags: [nodejs]
 
