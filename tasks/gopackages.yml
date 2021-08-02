@@ -17,8 +17,8 @@
         gopackage_install_state: true
       changed_when: false
       when:
-        - gopackage.name in gopackage_result.stdout
         - gopackage_result.rc != 0
+        - gopackage_bin in gopackage_result.stdout
 
     - name: "{{ gopackage.name }} | dependencies for build"
       package:
@@ -26,18 +26,18 @@
         state: present
         update_cache: yes
       become: yes
-      when: not gopackage_install_state and (gopackage.deps|length) >= 1
+      when: gopackage_install_state and (gopackage.deps|length) >= 1
 
     - name: "{{ gopackage.name }} | go get"
       command: "go get {{ gopackage.flags | d('') }} {{ gopackage.name }}@{{ gopackage.version }}"
-      when: not gopackage_install_state and gopackage_present
+      when: gopackage_install_state and gopackage_present
 
     - name: "{{ gopackage.name }} | symlink to bin system"
       file:
         src: "{{ go_env.GOPATH }}/bin/{{ gopackage_bin }}"
         dest: "/usr/local/bin/{{ gopackage_bin }}"
         state: link
-      when: not gopackage_install_state and gopackage_present
+      when: gopackage_install_state and gopackage_present
 
     - name: "{{ gopackage.name }} | remove if state absent"
       file:
@@ -46,7 +46,7 @@
       loop:
         - "$GOPATH/bin/{{ gopackage_bin }}"
         - "$GOPATH/pkg/mod/{{ gopackage.name }}"
-      when: gopackage_install_state and not gopackage_present
+      when: not gopackage_install_state and not gopackage_present
 
     - name: "{{ gopackage.name }} | clean dependencies for build"
       package:
@@ -55,7 +55,8 @@
         update_cache: yes
       become: yes
       when:
-        - not gopackage_install_state and gopackage_present
+        - gopackage_install_state
+        - gopackage_present
         - gopackage.deps|length >= 1
 
     - name: "{{ gopackage.name }} | Clean build packages"
@@ -63,5 +64,6 @@
         autoremove: yes
         purge: yes
       when:
-        - gopackage_present and ansible_os_family == 'Debian'
-        - not gopackage_install_state
+        - gopackage_present
+        - ansible_os_family == 'Debian'
+        - gopackage_install_state
