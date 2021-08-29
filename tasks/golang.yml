@@ -1,4 +1,9 @@
 ---
+
+- set_fact:
+    g_install_state: false
+    golang_install_state: false
+
 - name: "g | Check for installation"
   command: which g
   register: g_result
@@ -9,7 +14,23 @@
   set_fact:
     g_install_state: true
   changed_when: false
-  when: '"g" in g_result.stdout or g_result.rc != 0'
+  when:
+    - "'g' in g_result.stdout"
+    - g_result.rc != 0
+
+- name: "golang | Check for installation"
+  command: which go
+  register: go_result
+  changed_when: false
+  failed_when: false
+
+- name: "golang | Register existing installation status"
+  set_fact:
+    golang_install_state: true
+  changed_when: false
+  when:
+    - "'go' in go_result.stdout"
+    - go_result.rc != 0
 
 - name: Download g (simple golang version manager)
   get_url:
@@ -25,20 +46,21 @@
     state: directory
     mode: 0755
     recurse: yes
+  when: golang_install_state
 
 - name: go environment
   copy:
-    mode: u=rw,g=r,o=r
+    mode: u=rx,g=rx,o=r
     dest: /etc/profile.d/go-env.sh
     content: "\
       {% for key, value in go_env.items() %}\
       export {{ key }}={{ value }}\n\
       {% endfor %}"
+  when: golang_install_state
 
 - name: Setup g version manager
   shell: "GOPATH={{ go_env.GOPATH }} GOROOT={{ go_env.GOROOT }} /tmp/g-install -y bash zsh"
   when: g_install_state
-  ignore_errors: yes
 
 - name: Clean
   become: yes
@@ -46,18 +68,6 @@
     state: absent
     path: /tmp/g-install
   when: g_install_state
-
-- name: "golang | Check for installation"
-  command: which go
-  register: go_result
-  changed_when: false
-  failed_when: false
-
-- name: "golang | Register existing installation status"
-  set_fact:
-    golang_install_state: true
-  changed_when: false
-  when: '"go" in go_result.stdout or go_result.rc != 0'
 
 - name: Install golang
   command: "g install {{ golang_version }}"

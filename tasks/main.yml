@@ -16,4 +16,4 @@
   loop: "{{ golang_packages }}"
   when:
     - go_modules | d(False)
-    - (golang_packages|length) >= 1
+    - golang_packages | length >= 1
